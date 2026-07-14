@@ -1,7 +1,11 @@
 """
 Funciones compartidas por toda la app: lectura del Excel (por tablas
 nombradas, para que funcione con archivos actualizados del mismo formato),
-limpieza de datos y filtros de sidebar reutilizables entre páginas.
+limpieza de datos y filtros de sidebar.
+
+Los filtros se definen UNA sola vez, en app.py (el archivo de entrada),
+que actúa como "marco" común alrededor de todas las páginas. Así su
+estado se mantiene siempre al navegar, sin importar la página activa.
 """
 
 import io
@@ -102,8 +106,8 @@ def load_workbook_data(file_bytes: bytes):
 
 def ensure_data_loaded():
     """Muestra el file_uploader en el sidebar (si hace falta) y garantiza
-    que los dataframes estén en session_state. Para usar al principio de
-    cada página. Devuelve (df_pat, df_modelos, df_ciudades)."""
+    que los dataframes estén en session_state. Se llama una sola vez desde
+    app.py. Devuelve (df_pat, df_modelos, df_ciudades)."""
 
     with st.sidebar:
         st.markdown("### 📁 Datos")
@@ -140,13 +144,12 @@ def ensure_data_loaded():
 
 
 # ---------------------------------------------------------------------------
-# Filtros de sidebar reutilizables (comparten estado entre páginas)
+# Filtros de sidebar — se llaman UNA vez desde app.py (marco común)
 # ---------------------------------------------------------------------------
 
 def sidebar_filters(df: pd.DataFrame) -> pd.DataFrame:
     st.sidebar.markdown("### 🔎 Filtros")
 
-    min_p, max_p = df["Periodo"].min(), df["Periodo"].max()
     periodos = sorted(df["Periodo"].unique())
     periodo_labels = [pd.Timestamp(p).strftime("%Y-%m") for p in periodos]
     label_to_ts = dict(zip(periodo_labels, periodos))
